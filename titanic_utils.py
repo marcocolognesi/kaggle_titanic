@@ -1,4 +1,6 @@
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 def sum_mean_and_count_groupby(train_df: pd.DataFrame, variable: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -56,3 +58,51 @@ def get_eda_insights(titanic_train_dataset: pd.DataFrame, variable: str) -> pd.D
     # re-ordering columns
     variable_insights_df = variable_insights_df[['Passengers', '%_Passengers', 'Survived', '%_Sopravvivenza', 'Età_media', 'Prezzo_medio']]
     return variable_insights_df
+
+
+def plot_total_and_survived_based_on_label(variable_insights_df: pd.DataFrame, variable: str) -> None:
+    """_summary_
+
+    Args:
+        variable_insights_df (pd.DataFrame): _description_
+        variable (str): _description_
+    """
+    # initializing figure
+    plt.figure(tight_layout=True, figsize=(8,6))
+    
+    # title
+    plt.title(f'Numero di Passeggeri Totali e Sopravvissuti in base a {variable}', weight='bold')
+
+    # barplots
+    # total
+    sns.barplot(data=variable_insights_df, x=variable_insights_df.index, y='Passengers', label='Totale')
+    # survived
+    sns.barplot(data=variable_insights_df, x=variable_insights_df.index, y='Survived', label='Sopravvissuti')
+
+    # legend
+    plt.legend()
+    plt.show()
+
+
+def add_name_title_column(titanic_df: pd.DataFrame, column_with_names: str) -> pd.DataFrame:
+    """_summary_
+
+    Args:
+        titanic_df (pd.DataFrame): _description_
+        column_with_names (str): _description_
+
+    Returns:
+        pd.DataFrame: _description_
+    """
+    # first split by ','
+    first_split = [x.split(',')[1] for x in titanic_df[column_with_names]]
+
+    # second split by '.'
+    second_split = [x.split('.')[0] for x in first_split]
+
+    # delete empty space at the beginning using replace
+    title_names = [x.replace(' ', '') for x in second_split]
+
+    # add new column containing titles
+    titanic_df['Name_title'] = title_names
+    return titanic_df
