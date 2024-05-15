@@ -125,3 +125,84 @@ def find_avg_age_title_names(titanic_df: pd.DataFrame) -> pd.Series:
     # extrapolate 'Age' column in the groupy
     name_title_avg_age = name_title_mean_groupby['Age']
     return name_title_avg_age
+
+
+def tickets_higher_than_1_count(titanic_df: pd.DataFrame, ticket_column: str) -> pd.Series:
+    """_summary_
+
+    Args:
+        titanic_df (pd.DataFrame): _description_
+        ticket_column (str): _description_
+
+    Returns:
+        pd.Series: _description_
+    """
+    # tickets value counts
+    ticket_value_counts = titanic_df[ticket_column].value_counts()
+    
+    # filtering tickets that have value count > 1 (excluding passengers traveling alone)
+    tickets_more_than_one = ticket_value_counts[ticket_value_counts > 1]
+    return tickets_more_than_one
+
+
+def delete_null_family_tickets(family_tickets_dict: dict) -> dict:
+    """_summary_
+
+    Args:
+        family_tickets_dict (dict): _description_
+
+    Returns:
+        dict: _description_
+    """
+    # for loop that iterates through each ticket key in the dictionary
+    for ticket in family_tickets_dict:
+        # deleting null values from each key
+        family_tickets_dict[ticket] = [x for x in family_tickets_dict[ticket] if not pd.isna(x)]
+        # excluding empty keys (ones that only had null values)
+        family_tickets_dict = {k: v for k, v in family_tickets_dict.items() if v}
+    return family_tickets_dict
+
+
+def family_cabin_list(titanic_df: pd.DataFrame, ticket_column: str) -> dict:
+    """_summary_
+
+    Args:
+        titanic_df (pd.DataFrame): _description_
+        ticket_column (str): _description_
+
+    Returns:
+        dict: _description_
+    """
+    # Series of tickets with more than one value count
+    tickets_more_than_one = tickets_higher_than_1_count(titanic_df=titanic_df, ticket_column=ticket_column)
+    
+    # dictionary to store ticket number and related cabins
+    family_tickets_dict = {}
+    
+    # for loop that iterates through each ticket that has more than one value count
+    for ticket in tickets_more_than_one.index:
+        # find for each ticket the related cabins
+        cabin_series = list(titanic_df.loc[titanic_df[ticket_column] == ticket, 'Cabin'])
+        family_tickets_dict[ticket] = cabin_series
+        
+    # deleting null values
+    family_tickets_dict = delete_null_family_tickets(family_tickets_dict=family_tickets_dict)
+    return family_tickets_dict
+
+
+def add_deck_column(titanic_df: pd.DataFrame, cabin_column: str) -> pd.DataFrame:
+    """_summary_
+
+    Args:
+        titanic_df (pd.DataFrame): _description_
+        cabin_column (str): _description_
+
+    Returns:
+        pd.DataFrame: _description_
+    """
+    # slicing cabin string to retrieve the first letter (which indicates the deck)
+    sliced_cabin_name = [list(x) for x in titanic_df[cabin_column]]
+
+    # based on the first element of the cabin name (letter: 'A', 'B', ...) create column indicating the deck
+    titanic_df['Cabin_deck'] = [x[0] for x in sliced_cabin_name]
+    return titanic_df
